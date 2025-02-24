@@ -1,0 +1,57 @@
+/*
+ * Copyright 2018-2025 Secberus, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+syntax = "proto3";
+
+package service.v1.push;
+
+import "api/v1/push.proto";
+
+option go_package = "github.com/secberus/go-push-api/v1/service";
+
+
+service PushService {
+
+  rpc CreateTable(api.v1.CreateTableInput) returns (api.v1.CreateTableOutput) {}
+
+  rpc DropTable(api.v1.DropTableInput) returns (api.v1.DropTableOutput) {}
+
+  rpc AlterTable(api.v1.AlterTableInput) returns (api.v1.AlterTableOutput) {}
+
+  rpc TruncateTable(api.v1.TruncateTableInput) returns (api.v1.TruncateTableOutput) {}
+
+  rpc GetTable(api.v1.GetTableInput) returns (api.v1.GetTableOutput) {}
+
+  rpc ListTables(api.v1.ListTablesInput) returns (stream api.v1.ListTablesOutput) {}
+
+  rpc CreateIndex(api.v1.CreateIndexInput) returns (api.v1.CreateIndexOutput) {}
+
+  rpc DropIndex(api.v1.DropIndexInput) returns (api.v1.DropIndexOutput) {}
+
+  rpc AlterIndex(api.v1.AlterIndexInput) returns (api.v1.AlterIndexOutput) {}
+
+  rpc GetIndex(api.v1.GetIndexInput) returns (api.v1.GetIndexOutput) {}
+
+  rpc ListIndexes(api.v1.ListIndexesInput) returns (stream api.v1.ListIndexesOutput) {}
+
+  rpc UpsertRecords(api.v1.UpsertRecordsInput) returns (api.v1.UpsertRecordsOutput) {}
+
+  rpc DeleteRecords(api.v1.DeleteRecordsInput) returns (api.v1.DeleteRecordsOutput) {}
+
+  rpc SyncData(stream api.v1.SyncDataInput) returns (stream api.v1.SyncDataOutput) {}
+
+}
+

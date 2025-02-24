@@ -1,0 +1,228 @@
+/*
+ * Copyright 2018-2025 Secberus, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+syntax = "proto3";
+
+package types.v1;
+
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/secberus/go-push-api/types/v1";
+
+// Integer types
+
+message Integer {
+  optional sint32 value = 1;
+  optional sint32 default = 2;
+}
+
+message Smallint {
+  optional sint32 value = 1 [(buf.validate.field).sint32 = {gte: -32768, lte: 32767}];
+  optional sint32 default = 2 [(buf.validate.field).sint32 = {gte: -32768, lte: 32767}];
+}
+
+message Bigint {
+  optional sint64 value = 1;
+  optional sint64 default = 2;
+}
+
+// Arbitrary precision types
+
+message Numeric {
+  optional double value = 1;
+  optional int32 precision = 2  [(buf.validate.field).int32 = {lte: 1000}];
+  optional int32 scale = 3  [(buf.validate.field).int32 = {gt: 0, lte: 1000}];
+  optional double default = 4;
+}
+
+message Decimal {
+  optional double value = 1;
+  optional int32 precision = 2  [(buf.validate.field).int32 = {lte: 1000}];
+  optional int32 scale = 3  [(buf.validate.field).int32 = {gt: 0, lte: 1000}];
+  optional double default = 4;
+}
+
+// Floating point tyypes
+
+message Real {
+  optional float value = 1;
+  optional float default = 2;
+}
+
+message Double {
+  optional double value = 1;
+  optional double default = 2;
+}
+
+message Float {
+  optional double value = 1;
+  optional uint32 precision = 2 [(buf.validate.field).uint32 = {lte: 53}];
+  optional double default = 3;
+}
+
+// Character types
+
+message Char {
+  optional string value = 1;
+  optional uint32 length = 2;
+  optional string default = 3;
+}
+
+message Varchar {
+  optional string value = 1;
+  optional uint32 length = 2;
+  optional string default = 3;
+}
+
+message Text {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+// Binary types
+
+message Bytea {
+  optional bytes value = 1;
+}
+
+// Date/time types
+//
+// all date/time types are encoded using strings.  The expected format of the values
+// is RFC3339 / ISO 8601 date/time formatting.
+
+message Timestamp {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+message Timestamptz {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+message Date {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+message Time {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+message Timetz {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+// Boolean type
+
+message Boolean {
+  optional bool value = 1;
+  optional bool default = 2;
+}
+
+// Enum type
+//
+// On column creation, the members field must be set to include all enum elements.
+// If either value or default are set and do not match an element of members from this request, 
+// or a previous column creation request, an error will be returned.
+
+message Enum {
+  optional string value = 1;
+  repeated string members = 2;
+  optional string default = 3;
+}
+
+// Network address types
+
+message Inet {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+message Cidr {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+message Macaddr {
+  optional string value = 1;
+  optional string default = 2;
+
+}
+
+message Macaddr8 {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+// UUID type
+
+message Uuid {
+  optional string value = 1;
+}
+
+// JSON types
+
+message Jsonb {
+  optional string value = 1;
+  optional string default = 2;
+}
+
+
+// Union of the supported data types for a Column
+
+message DataType {
+  oneof union {
+    Text text = 1;
+    Jsonb jsonb = 2;
+    Boolean boolean = 3;
+    Integer integer = 4;
+    Smallint smallint = 5;
+    Bigint bigint = 6;
+    Real real = 7;
+    Double double = 8;
+    Float float = 9;
+    Char char = 10;
+    Varchar varchar = 11;
+    Bytea bytea = 12;
+    Timestamp timestamp = 13;
+    Timestamptz timestamptz = 14;
+    Date date = 15;
+    Time time = 16;
+    Timetz timetz = 17;
+    Enum enum = 18;
+    Inet inet = 19;
+    Cidr cidr = 20;
+    Macaddr macaddr = 21;
+    Macaddr8 macaddr8 = 22;
+    Uuid uuid = 23;
+    Numeric numeric = 24;
+    Decimal decimal = 25;
+  }
+}
+
+// Column definition
+
+message Column {
+  string name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+  bool primary_key = 2; // true adds this column to the table's primary key
+  bool nillable = 3; // true allows this column to be NULL
+  bool unique = 4; // true creates a UNIQUE constraint on this column in the table
+  DataType data_type = 5;
+}
+
