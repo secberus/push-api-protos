@@ -18,11 +18,15 @@ syntax = "proto3";
 
 package api.v1;
 
+import "buf/validate/validate.proto";
+import "types/v1/column.proto";
 import "types/v1/index.proto";
 import "types/v1/record.proto";
 import "types/v1/table.proto";
 
 option go_package = "github.com/secberus/go-push-api/api/v1";
+
+// ─── Table RPCs ──────────────────────────────────────────────────────────────
 
 message CreateTableInput {
   types.v1.Table table = 1;
@@ -33,92 +37,191 @@ message CreateTableOutput {
 }
 
 message DropTableInput {
-  string table_name = 1;
+  string table_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
 }
 
 message DropTableOutput {
   string table_name = 1;
 }
-  
-message AlterTableInput {
-  string table_name = 1;
+
+// AddColumnOperation adds a new column to the table.
+message AddColumnOperation {
+  types.v1.Column column = 1;
 }
 
-message AlterTableOutput {}
-  
+// DropColumnOperation removes a column from the table.
+message DropColumnOperation {
+  string column_name = 1 [(buf.validate.field).string.min_len = 2, (buf.validate.field).string.max_len = 63];
+}
+
+// AlterColumnOperation redefines an existing column. The column identified by
+// column_name is replaced with the definition in column. The column name inside
+// column may differ from column_name to effect a rename alongside a type change.
+message AlterColumnOperation {
+  string column_name = 1 [(buf.validate.field).string.min_len = 2, (buf.validate.field).string.max_len = 63];
+  types.v1.Column column = 2;
+}
+
+// RenameColumnOperation renames a column without changing its definition.
+message RenameColumnOperation {
+  string old_name = 1 [(buf.validate.field).string.min_len = 2, (buf.validate.field).string.max_len = 63];
+  string new_name = 2 [(buf.validate.field).string.min_len = 2, (buf.validate.field).string.max_len = 63];
+}
+
+// RenameTableOperation renames the table.
+message RenameTableOperation {
+  string new_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+}
+
+// AlterSyncTypeOperation changes how records are synced into the table.
+message AlterSyncTypeOperation {
+  types.v1.TableSyncType sync_type = 1 [(buf.validate.field).enum.defined_only = true];
+}
+
+// AlterTableOperation is a single DDL change applied to a table.
+// Multiple operations may be batched in a single AlterTableInput.
+message AlterTableOperation {
+  oneof operation {
+    AddColumnOperation    add_column    = 1;
+    DropColumnOperation   drop_column   = 2;
+    AlterColumnOperation  alter_column  = 3;
+    RenameColumnOperation rename_column = 4;
+    RenameTableOperation  rename_table  = 5;
+    AlterSyncTypeOperation alter_sync_type = 6;
+  }
+}
+
+message AlterTableInput {
+  string table_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+  repeated AlterTableOperation operations = 2 [(buf.validate.field).repeated.min_items = 1];
+}
+
+// AlterTableOutput returns the updated table definition after all operations
+// have been applied.
+message AlterTableOutput {
+  types.v1.Table table = 1;
+}
+
 message TruncateTableInput {
-  string table_name = 1;
+  string table_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
 }
 
 message TruncateTableOutput {
   string table_name = 1;
 }
-  
+
 message GetTableInput {
-  string table_name = 1;
+  string table_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
 }
 
 message GetTableOutput {
   types.v1.Table table = 1;
   types.v1.TableStats stats = 2;
 }
-  
+
 message ListTablesInput {}
 
 message ListTablesOutput {
   types.v1.Table table = 1;
   types.v1.TableStats stats = 2;
 }
-  
+
+// ─── Index RPCs ───────────────────────────────────────────────────────────────
+
 message CreateIndexInput {
   types.v1.Index index = 1;
 }
 
-message CreateIndexOutput {}
-  
-message DropIndexInput {
+message CreateIndexOutput {
   string index_name = 1;
+}
+
+message DropIndexInput {
+  string index_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
 }
 
 message DropIndexOutput {
   string index_name = 1;
 }
-  
+
+// RenameIndexOperation renames an index.
+message RenameIndexOperation {
+  string new_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+}
+
+// AlterIndexOperation is a single change applied to an index.
+// Currently only rename is supported in-place; other structural changes
+// require DropIndex + CreateIndex.
+message AlterIndexOperation {
+  oneof operation {
+    RenameIndexOperation rename = 1;
+  }
+}
+
 message AlterIndexInput {
-  string index_name = 1;
+  string index_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+  AlterIndexOperation operation = 2;
 }
 
-message AlterIndexOutput {}
-  
+// AlterIndexOutput returns the updated index definition after the operation
+// has been applied.
+message AlterIndexOutput {
+  types.v1.Index index = 1;
+}
+
 message GetIndexInput {
-  string index_name = 1;
+  string index_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
 }
 
-message GetIndexOutput {}
-  
-message ListIndexesInput {}
+message GetIndexOutput {
+  types.v1.Index index = 1;
+}
+
+// ListIndexesInput optionally filters results to a specific table.
+message ListIndexesInput {
+  // table_name, when set, restricts the response to indexes on that table.
+  optional string table_name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+}
 
 message ListIndexesOutput {
   types.v1.Index index = 1;
 }
-  
-message UpsertRecordsInput {
-  repeated types.v1.Record records = 1;
-} 
 
-message UpsertRecordsOutput {}
-  
-message DeleteRecordsInput {
-  repeated types.v1.Record primary_key = 1;
+// ─── Record RPCs ──────────────────────────────────────────────────────────────
+
+message UpsertRecordsInput {
+  repeated types.v1.Record records = 1 [(buf.validate.field).repeated.min_items = 1];
 }
 
-message DeleteRecordsOutput {}
-  
+message UpsertRecordsOutput {
+  // records_affected is the number of rows inserted or updated.
+  uint64 records_affected = 1;
+}
+
+message DeleteRecordsInput {
+  // records identifies the rows to delete. Only primary key column values are
+  // used; non-key columns in each Record are ignored.
+  repeated types.v1.Record records = 1 [(buf.validate.field).repeated.min_items = 1];
+}
+
+message DeleteRecordsOutput {
+  // records_deleted is the number of rows removed.
+  uint64 records_deleted = 1;
+}
+
+// ─── Sync RPC ─────────────────────────────────────────────────────────────────
+
 message SyncDataInput {
   bool auto_create_tables = 1;
   types.v1.TableSyncType sync_type = 2;
-  repeated types.v1.Record records = 3;
-} 
+  repeated types.v1.Record records = 3 [(buf.validate.field).repeated.min_items = 1];
+}
 
-message SyncDataOutput {}
-
+// SyncDataOutput acknowledges a processed batch from the client stream.
+message SyncDataOutput {
+  // table_name identifies the table this acknowledgment refers to.
+  string table_name = 1;
+  // records_processed is the cumulative count of records committed for this
+  // table within the current stream.
+  uint64 records_processed = 2;
+}

@@ -55,7 +55,7 @@ message Decimal {
   optional double default = 4;
 }
 
-// Floating point tyypes
+// Floating point types
 
 message Real {
   optional float value = 1;
