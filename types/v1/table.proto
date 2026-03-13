@@ -33,6 +33,7 @@ enum TableSyncType {
 message Table {
   string name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
   TableSyncType sync_type = 2;
+  reserved 3;
   repeated Column columns = 4;
 }
 
@@ -40,5 +41,6 @@ message Table {
 message TableStats {
   int64 total_size = 1;
   int64 record_count = 2;
+  reserved 3;
   int64 last_sync_time = 4;
 }

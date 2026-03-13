@@ -22,6 +22,34 @@ import "buf/validate/validate.proto";
 
 option go_package = "github.com/secberus/go-push-api/types/v1";
 
+// IndexType specifies the algorithm used to build and query the index.
+enum IndexType {
+  INDEX_TYPE_UNSPECIFIED = 0;
+  INDEX_TYPE_BTREE = 1;  // default; supports equality and range queries
+  INDEX_TYPE_HASH = 2;   // equality-only; smaller than btree for simple lookups
+  INDEX_TYPE_GIN = 3;    // generalized inverted index; suited for JSONB, arrays, full-text
+  INDEX_TYPE_GIST = 4;   // generalized search tree; suited for geometric/range types
+  INDEX_TYPE_BRIN = 5;   // block range index; very small; suited for naturally ordered data
+  INDEX_TYPE_SPGIST = 6; // space-partitioned gist; suited for non-balanced data structures
+}
+
 message Index {
+  // name is the identifier for this index (3–63 characters).
   string name = 1 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+
+  // table_name is the table this index is defined on.
+  string table_name = 2 [(buf.validate.field).string.min_len = 3, (buf.validate.field).string.max_len = 63];
+
+  // columns lists the column names that form the index key, in order.
+  repeated string columns = 3 [(buf.validate.field).repeated.min_items = 1];
+
+  // unique specifies whether the index enforces a UNIQUE constraint.
+  bool unique = 4;
+
+  // index_type selects the index algorithm. Defaults to BTREE when unspecified.
+  IndexType index_type = 5;
+
+  // where is an optional SQL predicate that restricts the index to a subset of
+  // rows (partial index). Leave empty for a full-table index.
+  optional string where = 6;
 }
